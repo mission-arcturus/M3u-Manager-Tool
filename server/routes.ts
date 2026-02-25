@@ -26,13 +26,8 @@ export async function registerRoutes(
     try {
       const input = api.channels.create.input.parse(req.body);
       
-      const existing = await storage.getChannels();
-      if (existing.some(c => c.serialNumber === input.serialNumber)) {
-        return res.status(400).json({
-          message: `Serial number ${input.serialNumber} is already in use`,
-          field: 'serialNumber',
-        });
-      }
+      // Automatic re-ordering: if serial exists, shift everything else up
+      await storage.reorderChannels(input.serialNumber);
 
       const channel = await storage.createChannel(input);
       res.status(201).json(channel);
@@ -53,13 +48,7 @@ export async function registerRoutes(
       const input = api.channels.update.input.parse(req.body);
 
       if (input.serialNumber !== undefined) {
-        const existing = await storage.getChannels();
-        if (existing.some(c => c.serialNumber === input.serialNumber && c.id !== id)) {
-          return res.status(400).json({
-            message: `Serial number ${input.serialNumber} is already in use`,
-            field: 'serialNumber',
-          });
-        }
+        await storage.reorderChannels(input.serialNumber, id);
       }
 
       const channel = await storage.updateChannel(id, input);

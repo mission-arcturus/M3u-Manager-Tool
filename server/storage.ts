@@ -6,7 +6,7 @@ import {
   type UpdateChannelRequest,
   type ChannelResponse
 } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, gte, and, ne, sql } from "drizzle-orm";
 
 export interface IStorage {
   getChannels(): Promise<ChannelResponse[]>;
@@ -14,6 +14,7 @@ export interface IStorage {
   createChannel(channel: CreateChannelRequest): Promise<ChannelResponse>;
   updateChannel(id: number, updates: UpdateChannelRequest): Promise<ChannelResponse>;
   deleteChannel(id: number): Promise<void>;
+  reorderChannels(targetSerial: number, excludeId?: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -41,6 +42,16 @@ export class DatabaseStorage implements IStorage {
 
   async deleteChannel(id: number): Promise<void> {
     await db.delete(channels).where(eq(channels.id, id));
+  }
+
+  async reorderChannels(targetSerial: number, excludeId?: number): Promise<void> {
+    const condition = excludeId 
+      ? and(gte(channels.serialNumber, targetSerial), ne(channels.id, excludeId))
+      : gte(channels.serialNumber, targetSerial);
+
+    await db.update(channels)
+      .set({ serialNumber: sql`${channels.serialNumber} + 1` })
+      .where(condition);
   }
 }
 
