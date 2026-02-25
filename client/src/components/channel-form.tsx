@@ -132,13 +132,13 @@ export function ChannelForm({
           />
         </div>
 
-        {/* Sync Slider & Input for Serial Number */}
+        {/* Input for Serial Number */}
         <FormField
           control={form.control}
           name="serialNumber"
           render={({ field }) => (
             <FormItem className="bg-secondary/30 p-4 rounded-xl border border-border/50">
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex justify-between items-center">
                 <FormLabel className="text-base">Channel Order / Serial Number</FormLabel>
                 <FormControl>
                   <Input 
@@ -150,17 +150,8 @@ export function ChannelForm({
                   />
                 </FormControl>
               </div>
-              <FormControl>
-                <Slider 
-                  value={[field.value || 0]} 
-                  max={999} 
-                  step={1} 
-                  onValueChange={(vals) => field.onChange(vals[0])}
-                  className="py-2"
-                />
-              </FormControl>
               <FormDescription className="mt-2">
-                Determines the order of this channel in the generated M3U playlist.
+                Determines the order of this channel in the generated M3U playlist. Must be unique.
               </FormDescription>
               <FormMessage />
             </FormItem>

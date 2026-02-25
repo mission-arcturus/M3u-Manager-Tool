@@ -25,6 +25,15 @@ export async function registerRoutes(
   app.post(api.channels.create.path, async (req, res) => {
     try {
       const input = api.channels.create.input.parse(req.body);
+      
+      const existing = await storage.getChannels();
+      if (existing.some(c => c.serialNumber === input.serialNumber)) {
+        return res.status(400).json({
+          message: `Serial number ${input.serialNumber} is already in use`,
+          field: 'serialNumber',
+        });
+      }
+
       const channel = await storage.createChannel(input);
       res.status(201).json(channel);
     } catch (err) {
@@ -40,8 +49,20 @@ export async function registerRoutes(
 
   app.put(api.channels.update.path, async (req, res) => {
     try {
+      const id = Number(req.params.id);
       const input = api.channels.update.input.parse(req.body);
-      const channel = await storage.updateChannel(Number(req.params.id), input);
+
+      if (input.serialNumber !== undefined) {
+        const existing = await storage.getChannels();
+        if (existing.some(c => c.serialNumber === input.serialNumber && c.id !== id)) {
+          return res.status(400).json({
+            message: `Serial number ${input.serialNumber} is already in use`,
+            field: 'serialNumber',
+          });
+        }
+      }
+
+      const channel = await storage.updateChannel(id, input);
       res.json(channel);
     } catch (err) {
       if (err instanceof z.ZodError) {
