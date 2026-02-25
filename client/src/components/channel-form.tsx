@@ -139,7 +139,7 @@ export function ChannelForm({
           render={({ field }) => (
             <FormItem className="bg-secondary/30 p-4 rounded-xl border border-border/50">
               <div className="flex justify-between items-center">
-                <FormLabel className="text-base">Channel Order / Serial Number</FormLabel>
+                <FormLabel className="text-base">Order Number</FormLabel>
                 <FormControl>
                   <Input 
                     type="number" 
@@ -151,7 +151,7 @@ export function ChannelForm({
                 </FormControl>
               </div>
               <FormDescription className="mt-2">
-                Determines the order of this channel in the generated M3U playlist. Must be unique.
+                Must be unique. Determines playlist order.
               </FormDescription>
               <FormMessage />
             </FormItem>
