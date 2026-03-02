@@ -118,7 +118,7 @@ export function ChannelForm({
           </div>
 
           <div className="space-y-2">
-            <FormLabel>Stream URLs <span className="text-destructive">*</span></FormLabel>
+            <FormLabel>Stream URL <span className="text-destructive">*</span></FormLabel>
             {fields.map((field, index) => (
               <div key={field.id} className="flex gap-2">
                 <FormField
@@ -137,15 +137,16 @@ export function ChannelForm({
                     </FormItem>
                   )}
                 />
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={() => remove(index)}
-                  disabled={fields.length === 1}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                {index > 0 && (
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={() => remove(index)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             ))}
             <Button 
@@ -155,7 +156,7 @@ export function ChannelForm({
               className="mt-2"
               onClick={() => append("")}
             >
-              <Plus className="h-4 w-4 mr-2" /> Add URL
+              <Plus className="h-4 w-4 mr-2" /> More Add
             </Button>
           </div>
         </div>
