@@ -34,7 +34,9 @@ export const api = {
     create: {
       method: 'POST' as const,
       path: '/api/channels' as const,
-      input: insertChannelSchema,
+      input: insertChannelSchema.extend({
+        urls: z.array(z.string().url()).min(1)
+      }).omit({ url: true }),
       responses: {
         201: z.custom<typeof channels.$inferSelect>(),
         400: errorSchemas.validation,
@@ -43,7 +45,9 @@ export const api = {
     update: {
       method: 'PUT' as const,
       path: '/api/channels/:id' as const,
-      input: insertChannelSchema.partial(),
+      input: insertChannelSchema.extend({
+        urls: z.array(z.string().url()).min(1)
+      }).omit({ url: true }).partial(),
       responses: {
         200: z.custom<typeof channels.$inferSelect>(),
         400: errorSchemas.validation,

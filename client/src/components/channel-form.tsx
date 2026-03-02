@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { 
@@ -13,22 +13,22 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
 import { api } from "@shared/routes";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, Trash2 } from "lucide-react";
 
 const formSchema = api.channels.create.input.extend({
   serialNumber: z.coerce.number().min(0, "Must be at least 0"),
+  urls: z.array(z.string().url("Must be a valid URL")).min(1, "At least one URL is required"),
   tvgId: z.string().optional().nullable(),
   tvgLogo: z.string().url("Must be a valid URL").optional().nullable().or(z.literal("")),
   tvgGroup: z.string().optional().nullable(),
-});
+}).omit({ url: true });
 
 type FormValues = z.infer<typeof formSchema>;
 
 interface ChannelFormProps {
-  initialData?: Partial<FormValues>;
-  onSubmit: (data: FormValues) => void;
+  initialData?: any;
+  onSubmit: (data: any) => void;
   isPending?: boolean;
   submitLabel?: string;
 }
@@ -44,7 +44,7 @@ export function ChannelForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: initialData?.name || "",
-      url: initialData?.url || "",
+      urls: initialData?.urls || [""],
       serialNumber: initialData?.serialNumber || 0,
       tvgId: initialData?.tvgId || "",
       tvgLogo: initialData?.tvgLogo || "",
@@ -52,12 +52,17 @@ export function ChannelForm({
     },
   });
 
-  // Reset form when initialData changes (useful for modals)
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "urls" as any
+  });
+
+  // Reset form when initialData changes
   useEffect(() => {
     if (initialData) {
       form.reset({
         name: initialData.name || "",
-        url: initialData.url || "",
+        urls: initialData.urls || [""],
         serialNumber: initialData.serialNumber || 0,
         tvgId: initialData.tvgId || "",
         tvgLogo: initialData.tvgLogo || "",
@@ -67,7 +72,6 @@ export function ChannelForm({
   }, [initialData, form]);
 
   const handleSubmit = (values: FormValues) => {
-    // Clean up empty strings to nulls to match typical DB expectations for optional fields
     const cleanedValues = {
       ...values,
       tvgId: values.tvgId || null,
@@ -113,23 +117,47 @@ export function ChannelForm({
             />
           </div>
 
-          <FormField
-            control={form.control}
-            name="url"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Stream URL <span className="text-destructive">*</span></FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="http://example.com/stream.m3u8" 
-                    className="font-mono text-sm" 
-                    {...field} 
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="space-y-2">
+            <FormLabel>Stream URLs <span className="text-destructive">*</span></FormLabel>
+            {fields.map((field, index) => (
+              <div key={field.id} className="flex gap-2">
+                <FormField
+                  control={form.control}
+                  name={`urls.${index}` as any}
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormControl>
+                        <Input 
+                          placeholder="http://example.com/stream.m3u8" 
+                          className="font-mono text-sm" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => remove(index)}
+                  disabled={fields.length === 1}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm" 
+              className="mt-2"
+              onClick={() => append("")}
+            >
+              <Plus className="h-4 w-4 mr-2" /> Add URL
+            </Button>
+          </div>
         </div>
 
         {/* Input for Serial Number */}

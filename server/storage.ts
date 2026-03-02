@@ -27,12 +27,12 @@ export class DatabaseStorage implements IStorage {
     return channel;
   }
 
-  async createChannel(channel: CreateChannelRequest): Promise<ChannelResponse> {
+  async createChannel(channel: any): Promise<ChannelResponse> {
     const [created] = await db.insert(channels).values(channel).returning();
     return created;
   }
 
-  async updateChannel(id: number, updates: UpdateChannelRequest): Promise<ChannelResponse> {
+  async updateChannel(id: number, updates: any): Promise<ChannelResponse> {
     const [updated] = await db.update(channels)
       .set(updates)
       .where(eq(channels.id, id))

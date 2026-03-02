@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Plus, 
@@ -9,7 +9,8 @@ import {
   Tv, 
   Link as LinkIcon, 
   Copy,
-  ArrowUpDown
+  ArrowUpDown,
+  GripHorizontal
 } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,60 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ChannelForm } from "@/components/channel-form";
 import { useChannels, useCreateChannel, useUpdateChannel, useDeleteChannel } from "@/hooks/use-channels";
+
+function DraggableDialogContent({ children, className, ...props }: any) {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const offsetRef = useRef({ x: 0, y: 0 });
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    offsetRef.current = {
+      x: e.clientX - position.x,
+      y: e.clientY - position.y
+    };
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+      setPosition({
+        x: e.clientX - offsetRef.current.x,
+        y: e.clientY - offsetRef.current.y
+      });
+    };
+
+    const handleMouseUp = () => setIsDragging(false);
+
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
+
+  return (
+    <DialogContent 
+      className={className} 
+      style={{ 
+        transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
+        transition: isDragging ? 'none' : 'transform 0.2s'
+      }} 
+      {...props}
+    >
+      <div 
+        className="absolute top-0 left-0 right-0 h-10 cursor-move flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-muted/20"
+        onMouseDown={handleMouseDown}
+      >
+        <GripHorizontal className="w-4 h-4 text-muted-foreground" />
+      </div>
+      {children}
+    </DialogContent>
+  );
+}
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -231,13 +286,13 @@ export default function Dashboard() {
                 {/* URL */}
                 <div className="col-span-12 md:col-span-4 flex items-center gap-2">
                   <div className="truncate text-sm font-mono text-muted-foreground max-w-[200px] sm:max-w-full">
-                    {channel.url}
+                    {channel.urls?.join(', ') || channel.url}
                   </div>
                   <Button 
                     variant="ghost" 
                     size="icon" 
                     className="h-6 w-6 ml-auto md:ml-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => handleCopyUrl(channel.url)}
+                    onClick={() => handleCopyUrl(channel.urls?.[0] || channel.url)}
                   >
                     <Copy className="w-3 h-3 text-muted-foreground" />
                   </Button>
@@ -274,7 +329,7 @@ export default function Dashboard() {
 
       {/* Add Dialog */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <DialogContent className="sm:max-w-xl">
+        <DraggableDialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Add New Channel</DialogTitle>
             <DialogDescription>Create a new stream entry for your playlist.</DialogDescription>
@@ -293,12 +348,12 @@ export default function Dashboard() {
               }} 
             />
           </div>
-        </DialogContent>
+        </DraggableDialogContent>
       </Dialog>
 
       {/* Edit Dialog */}
       <Dialog open={!!editingChannel} onOpenChange={(open) => !open && setEditingChannel(null)}>
-        <DialogContent className="sm:max-w-xl">
+        <DraggableDialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Edit Channel</DialogTitle>
             <DialogDescription>Update stream details for {editingChannel?.name}.</DialogDescription>
@@ -320,7 +375,7 @@ export default function Dashboard() {
               />
             )}
           </div>
-        </DialogContent>
+        </DraggableDialogContent>
       </Dialog>
 
       {/* Delete Confirmation */}

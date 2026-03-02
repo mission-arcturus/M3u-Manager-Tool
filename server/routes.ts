@@ -74,11 +74,13 @@ export async function registerRoutes(
     
     let m3u = "#EXTM3U\n";
     for (const channel of channels) {
-      m3u += `#EXTINF:-1`;
-      if (channel.tvgId) m3u += ` tvg-id="${channel.tvgId}"`;
-      if (channel.tvgLogo) m3u += ` tvg-logo="${channel.tvgLogo}"`;
-      if (channel.tvgGroup) m3u += ` tvg-group="${channel.tvgGroup}"`;
-      m3u += `,${channel.name}\n${channel.url}\n`;
+      for (const url of channel.urls) {
+        m3u += `#EXTINF:-1`;
+        if (channel.tvgId) m3u += ` tvg-id="${channel.tvgId}"`;
+        if (channel.tvgLogo) m3u += ` tvg-logo="${channel.tvgLogo}"`;
+        if (channel.tvgGroup) m3u += ` tvg-group="${channel.tvgGroup}"`;
+        m3u += `,${channel.name}\n${url}\n`;
+      }
     }
 
     res.setHeader('Content-Type', 'audio/x-mpegurl');

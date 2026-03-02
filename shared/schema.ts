@@ -1,12 +1,14 @@
 import { pgTable, text, serial, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { sql } from "drizzle-orm";
 
 export const channels = pgTable("channels", {
   id: serial("id").primaryKey(),
   serialNumber: integer("serial_number").notNull().default(0),
   name: text("name").notNull(),
-  url: text("url").notNull(),
+  url: text("url").notNull().default(""),
+  urls: text("urls").array().notNull().default(sql`ARRAY[]::text[]`),
   tvgId: text("tvg_id"),
   tvgLogo: text("tvg_logo"),
   tvgGroup: text("tvg_group"),
